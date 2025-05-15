@@ -63,7 +63,6 @@
             </div>
         </div>
 
-        <!-- D3.js Chart -->
         <div class="budget-card">
             <h4 class="mb-4">Budget vs Actual Spending</h4>
             <div id="budgetChart" class="chart-container"></div>
@@ -96,16 +95,15 @@
     </div>
 
     <script>
-        // D3.js Chart Implementation
         document.addEventListener('DOMContentLoaded', function() {
             const data = {{ chart_data|safe }};
             
-            // Set up the chart dimensions
+            // chart dimensions
             const margin = {top: 20, right: 30, bottom: 40, left: 60};
             const width = document.getElementById('budgetChart').clientWidth - margin.left - margin.right;
             const height = 400 - margin.top - margin.bottom;
 
-            // Create SVG
+            //  SVG
             const svg = d3.select("#budgetChart")
                 .append("svg")
                 .attr("width", width + margin.left + margin.right)
@@ -124,7 +122,6 @@
                 .range([height, 0])
                 .domain([0, d3.max(data, d => Math.max(d.budget, d.spent))]);
 
-            // Add X axis
             svg.append("g")
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(x))
@@ -132,11 +129,9 @@
                 .attr("transform", "translate(-10,0)rotate(-45)")
                 .style("text-anchor", "end");
 
-            // Add Y axis
             svg.append("g")
                 .call(d3.axisLeft(y).ticks(5).tickFormat(d => "₹" + d));
 
-            // Add bars for budget
             svg.selectAll(".budget-bar")
                 .data(data)
                 .enter()
@@ -161,7 +156,6 @@
                 .attr("height", d => height - y(d.spent))
                 .attr("fill", "#dc3545");
 
-            // Add legend
             const legend = svg.append("g")
                 .attr("transform", `translate(${width - 100}, 0)`);
 

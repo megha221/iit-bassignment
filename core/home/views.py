@@ -1,16 +1,14 @@
-# Import necessary libraries
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from django.contrib.auth.models import User  # Import User model
+from django.contrib.auth.models import User  
 from django.db.models import Sum
 from django.utils import timezone
 from datetime import datetime
 from .models import Expense, Category, Transaction, Budget
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
-# Create Expense page
 @login_required(login_url='/login/')
 def expenses(request):
     salary = 0 
@@ -32,13 +30,11 @@ def expenses(request):
         queryset = queryset.filter(
             name__icontains=request.GET.get('search'))
 
-    # Calculate the total sum
     total_sum = sum(expense.price for expense in queryset)
     
     context = {'expenses': queryset, 'total_sum': total_sum}
     return render(request, 'expenses.html', context)
 
-# Update the Expenses data
 @login_required(login_url='/login/')
 def update_expense(request, id):
     queryset = Expense.objects.get(id=id)
@@ -56,14 +52,12 @@ def update_expense(request, id):
     context = {'expense': queryset}
     return render(request, 'update_expense.html', context)
 
-# Delete the Expenses data
 @login_required(login_url='/login/')
 def delete_expense(request, id):
     queryset = Expense.objects.get(id=id)
     queryset.delete()
     return redirect('/')
 
-# Login page for user
 def login_page(request):
     if request.method == "POST":
         try:
@@ -84,7 +78,6 @@ def login_page(request):
             return redirect('/register/')
     return render(request, "login.html")
 
-# Register page for user
 def register_page(request):
     if request.method == "POST":
         try:
@@ -104,12 +97,10 @@ def register_page(request):
             return redirect('/register')
     return render(request, "register.html")
 
-# Logout function
 def custom_logout(request):
     logout(request)
     return redirect('login')
 
-# Generate the Bill
 @login_required(login_url='/login/')
 def pdf(request):
     if request.method == 'POST':
@@ -130,9 +121,7 @@ def pdf(request):
         queryset = queryset.filter(
             name__icontains=request.GET.get('search'))
 
-    # Calculate the total sum
     total_sum = sum(expense.price for expense in queryset)
-    # Get the username
     username = request.user.username
 
     context = {'expenses': queryset, 'total_sum': total_sum, 'username':username}
@@ -140,7 +129,6 @@ def pdf(request):
 
 @login_required(login_url='/login/')
 def dashboard(request):
-    # Get current month's start and end dates
     today = timezone.now()
     start_date = today.replace(day=1)
     if today.month == 12:
@@ -148,19 +136,18 @@ def dashboard(request):
     else:
         end_date = today.replace(month=today.month + 1, day=1)
     
-    # Get transactions for current month
     transactions = Transaction.objects.filter(
         user=request.user,
         date__gte=start_date,
         date__lt=end_date
     ).order_by('-date')
     
-    # Calculate totals
+   
     total_income = transactions.filter(transaction_type='INCOME').aggregate(total=Sum('amount'))['total'] or 0
     total_expenses = transactions.filter(transaction_type='EXPENSE').aggregate(total=Sum('amount'))['total'] or 0
     balance = total_income - total_expenses
     
-    # Get budgets
+   
     budgets = Budget.objects.filter(user=request.user, month__year=today.year, month__month=today.month)
     budget_status = []
     for budget in budgets:
@@ -287,12 +274,12 @@ def budget_overview(request):
         month__month=selected_month.month
     ).select_related('category')
     
-    # Calculate totals
+    
     total_budget = sum(budget.amount for budget in budgets)
     total_spent = sum(budget.get_spent_amount() for budget in budgets)
     total_remaining = total_budget - total_spent
     
-    # Prepare data for the chart
+    
     chart_data = []
     for budget in budgets:
         spent = budget.get_spent_amount()
@@ -355,17 +342,14 @@ def update_transaction(request, id):
 
 @login_required(login_url='/login/')
 def transactions(request):
-    # Get filter parameters
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     category_id = request.GET.get('category')
     min_amount = request.GET.get('min_amount')
     max_amount = request.GET.get('max_amount')
     
-    # Base queryset
     transactions = Transaction.objects.filter(user=request.user)
     
-    # Apply filters
     if start_date:
         transactions = transactions.filter(date__gte=start_date)
     if end_date:
@@ -377,12 +361,11 @@ def transactions(request):
     if max_amount:
         transactions = transactions.filter(amount__lte=max_amount)
     
-    # Order by date (newest first)
     transactions = transactions.order_by('-date')
     
-    # Pagination
+    
     page = request.GET.get('page', 1)
-    paginator = Paginator(transactions, 10)  # Show 10 transactions per page
+    paginator = Paginator(transactions, 10)  
     try:
         transactions = paginator.page(page)
     except PageNotAnInteger:
